@@ -1,0 +1,130 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+    <style></style>
+    <link href="css/style.css" rel="stylesheet" />   
+  </head>
+  <body>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  	<script>
+  	var width,
+  		height,
+  		svgContainer,
+  		arrayA,
+  		arrayB,
+  		arrayWidth,
+  		arrayHeight,
+  		squareSize,
+  		toggle,
+  		remainderXBuffer,
+  		remainderYBuffer;
+
+
+  	function init(){
+  		squareSize = 10;
+  		width = window.innerWidth;
+  		height = window.innerHeight;
+
+  		initArrays();
+
+  		toggle = true;
+  		remainderXBuffer = (width - arrayWidth * squareSize) / 2 + squareSize/2;
+  		remainderYBuffer = (height - arrayHeight * squareSize) / 2 + squareSize/2;
+
+  		svgContainer = d3.select("body")
+  			.append("svg");
+
+  		draw();
+  	}
+
+  	function initArrays(){
+
+  		// calculate array size
+  		arrayWidth = parseInt( width / squareSize );
+  		arrayHeight = parseInt( height / squareSize );
+  		console.log("arrayWidth: "+arrayWidth+" arrayHeight: "+arrayHeight);
+
+  		// initialise arrays to false
+  		arrayA = arrayB = new Array(arrayWidth);
+  		for (var i = 0; i < arrayWidth; i++){
+  			arrayA[i] = arrayB[i] = new Array(arrayHeight);
+  			for (var j = 0; j < arrayHeight; j++){
+  				arrayA[i][j] = arrayB[i][j] = {"alive":false};
+  			} 
+  		}
+
+  		// seed arrayA
+  		arrayA[1][1].alive = arrayA[1][2].alive = arrayA[1][3].alive = arrayA[1][4].alive = true;
+
+
+  		// console.log(arrayA);
+  	}
+
+  	function draw(){
+  		//background
+  		svgContainer.append("rect")
+  			.attr("width", "100%")
+  			.attr("height", "100%")
+  			.attr("fill", "pink");
+
+  		run();
+  	}
+
+  	function run(){
+  		var running = setInterval(function(){
+          drawTick();
+          tick();
+        },500);
+        function done(){
+          clearInterval(reading);      
+        } 
+  	}
+
+  	function tick(){
+
+  		
+
+  		for (row = 0; row < arrayWidth; row++){
+  			for (col = 0; col < arrayHeight; col++){
+  				var aliveNeighbours = checkNeighbours(row, col);
+			// Any live cell with fewer than two live neighbours dies, as if caused by under-population.
+				if(arrayA.alive && aliveNeighbours < 2){arrayB.alive = false;}
+			// Any live cell with two or three live neighbours lives on to the next generation.
+				else if(arrayA.alive && aliveNeighbours < 4){arrayB.alive = true;}
+			// Any live cell with more than three live neighbours dies, as if by overcrowding.
+				else if(arrayA.alive){arrayB.alive = false;}
+			// Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
+				else if(!arrayA.alive && aliveNeighbours === 3){arrayB.alive = true;}
+  			}
+  		}
+  	}
+
+  	function checkNeighbours(row, col){
+		//function for using modulo and keeping output positive
+  		Number.prototype.mod = function(n) { return ((this%n)+n)%n; }
+  	}
+
+  	function drawTick(){
+
+  		svgContainer.selectAll("g")
+  			.data(arrayA)
+  			.enter()
+  			.append("g")
+  			.selectAll("circle")
+  			.data( function(d, i, j){ return d;})
+  			.enter()
+  			.append("circle")
+  			.attr("cx", function(d, i, j){ return j * squareSize + remainderXBuffer ;})
+  			.attr("cy", function(d, i, j){ return i * squareSize + remainderYBuffer ;})
+  			.attr("r", function(d,i){
+	  				if (d.alive){ return 5;} else {return 1;} 
+	  			;})
+  	}
+
+  	init();
+
+  	</script>
+
+  </body>
+</html>
