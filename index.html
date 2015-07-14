@@ -23,8 +23,10 @@
 
   	function init(){
   		squareSize = 10;
-  		width = window.innerWidth;
-  		height = window.innerHeight;
+  		// width = window.innerWidth;
+  		// height = window.innerHeight;
+      width = 40;
+      height = 40;
 
   		initArrays();
 
@@ -34,7 +36,7 @@
 
   		svgContainer = d3.select("body")
   			.append("svg");
-
+      
   		draw();
   	}
 
@@ -53,13 +55,16 @@
   				arrayA[i][j] = arrayB[i][j] = {"alive":false};
   			} 
   		}
-
+      // console.log(arrayA);
   		// seed arrayA
-  		arrayA[1][1].alive = arrayA[1][2].alive = arrayA[1][3].alive = arrayA[1][4].alive = true;
+  		// arrayA[1][1].alive = arrayA[1][2].alive = arrayA[1][3].alive = arrayA[1][0].alive = true;
+      arrayA[1][1].alive = true;
 
 
   		// console.log(arrayA);
   	}
+
+
 
   	function draw(){
   		//background
@@ -67,16 +72,63 @@
   			.attr("width", "100%")
   			.attr("height", "100%")
   			.attr("fill", "pink");
-
+      drawInit();
   		run();
+      // tempDraw();
   	}
+
+    function tempDraw(){
+      var data = [30];
+      svgContainer.selectAll("g")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", 60)
+        .attr("cy", 100)
+        .attr("r", function(d){ return d;})
+
+        var count = 0;
+        var running = setInterval(function(){
+
+          data[0] = data[0] - 1;
+
+            svgContainer.selectAll("circle")
+            .data(data)
+            .enter()
+            .transition()
+            .attr("r", function(d){ return d;});
+
+          if(count++ == 10){done()};
+
+        },500);
+        function done(){
+          console.log("done");
+          clearInterval(running);      
+        }
+    }
+
+    function drawInit(){
+      svgContainer.selectAll("g")
+        .data(arrayA)
+        .enter()
+        .append("g")
+        .selectAll("circle")
+        .data( function(d, i, j){ return d;})
+        .enter()
+        .append("circle")
+        .attr("cx", function(d, i, j){ return j * squareSize + remainderXBuffer ;})
+        .attr("cy", function(d, i, j){ return i * squareSize + remainderYBuffer ;})
+        .attr("r", function(d,i){
+            if (d.alive){ return 5;} else {return 1;} 
+          ;})
+    }
 
   	function run(){
   		var count = 0;
   		var running = setInterval(function(){
           drawTick();
           tick();
-          if(count++ === 10){done()};
+          if(count++ == 10){done()};
 
         },500);
         function done(){
@@ -88,6 +140,14 @@
   	function tick(){
 
   		console.log("tick");
+
+      //clear arrayB
+      for (row = 0; row < arrayWidth; row++){
+        for (col = 0; col < arrayHeight; col++){
+          arrayB[col][row].alive = false;
+        }
+      }
+      // console.log(arrayB);
 
   		//create next array
   		for (row = 0; row < arrayWidth; row++){
@@ -111,8 +171,17 @@
 					arrayB[row][col].alive = true;}
   			}
   		}
+      // console.log(arrayB);
+
   		//set array
-  		arrayA = arrayB;
+      for (row = 0; row < arrayWidth; row++){
+        for (col = 0; col < arrayHeight; col++){
+          arrayA[col][row].alive = arrayB[col][row].alive;
+          console.log(arrayA[col][row].alive);
+        }
+      }
+  		// arrayA = arrayB;
+    //   console.log(arrayA);
   	}
 
   	//count number of surrounding neighbours
@@ -136,18 +205,23 @@
   	}
 
   	function drawTick(){
+      //background
+      // svgContainer.append("rect")
+      //   .attr("width", "100%")
+      //   .attr("height", "100%")
+      //   .attr("fill", "pink");
+      // drawInit();
 
-  		svgContainer.selectAll("g")
+  		d3.selectAll("circle")
   			.data(arrayA)
-  			.enter()
-  			.append("g")
-  			.selectAll("circle")
-  			.data( function(d, i, j){ return d;})
-  			.enter()
-  			.append("circle")
-  			.attr("cx", function(d, i, j){ return j * squareSize + remainderXBuffer ;})
-  			.attr("cy", function(d, i, j){ return i * squareSize + remainderYBuffer ;})
-  			.attr("r", function(d,i){
+  			// .selectAll("circle")
+  			.data( function(d){ return d;})
+  			// .enter()
+  			// .append("circle")
+  			// .attr("cx", function(d, i, j){ return j * squareSize + remainderXBuffer ;})
+  			// .attr("cy", function(d, i, j){ return i * squareSize + remainderYBuffer ;})
+  			.transition()
+        .attr("r", function(d){
 	  				if (d.alive){ return 5;} else {return 1;} 
 	  			;})
   	}

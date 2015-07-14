@@ -1,0 +1,79 @@
+<html>
+  <head>
+    <title></title>
+    <meta content="">
+    <style></style>
+    <link href="css/style.css" rel="stylesheet" />   
+  </head>
+  <body>
+  	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+  	<script>
+  	var width,
+  		height,
+  		svgContainer,
+  		arrayA,
+  		arrayB,
+  		arrayWidth,
+  		arrayHeight,
+  		squareSize,
+  		toggle,
+  		remainderXBuffer,
+  		remainderYBuffer;
+
+
+  	function init(){
+  		squareSize = 10;
+  		// width = window.innerWidth;
+  		// height = window.innerHeight;
+      width = 40;
+      height = 40;
+
+
+  		svgContainer = d3.select("body")
+  			.append("svg");
+      
+  		draw();
+  	}
+
+
+
+
+
+  	function draw(){
+  		//background
+  		svgContainer.append("rect")
+  			.attr("width", "100%")
+  			.attr("height", "100%")
+  			.attr("fill", "pink");
+    //   drawInit();
+  		// run();
+      tempDraw();
+  	}
+
+ function tempDraw(){
+      var data = [30];
+      svgContainer.selectAll("g")
+        .data(data)
+        .enter()
+        .append("circle")
+        .attr("cx", 60)
+        .attr("cy", 100)
+        .attr("r", function(d){ return d;})
+
+      data[0] = 1;
+
+      svgContainer.selectAll("circle")
+      .data(data)
+      // .each()
+      .transition()
+      .attr("r", function(d){return d;})
+    }
+
+  
+
+  	init();
+
+  	</script>
+
+  </body>
+</html>
