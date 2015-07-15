@@ -1,32 +1,54 @@
+<!DOCTYPE html>
 <html>
   <head>
-    <title></title>
+    <title>Leon North Game Of Life</title>
     <meta content="">
-    <style></style>
-    <link href="css/style.css" rel="stylesheet" />   
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <link href="css/main.css" rel="stylesheet" />       
   </head>
   <body>
+  	<!-- Import d3 -->
   	<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+
+    <!-- navigation panel -->
+    <nav class="navbar navbar-default" id="nav">
+      <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+          <a class="navbar-brand" href="../index.html">Leon North Home</a>
+        </div>
+      </div><!-- /.container-fluid -->
+    </nav>
+
+    <nav class="row">
+      <div class="container-fluid" id="content">
+      </div><!-- /.container-fluid -->
+    </nav>
+
+    <!-- space for svg -->
+
+
   	<script>
   	var width,
   		height,
   		svgContainer,
-  		arrayA,
-  		arrayB,
   		arrayWidth,
   		arrayHeight,
   		squareSize,
   		toggle,
   		remainderXBuffer,
+  		pause,
   		remainderYBuffer;
-
+  	var arrayA;
+  	var	arrayB;
 
   	function init(){
-  		squareSize = 10;
-  		// width = window.innerWidth;
-  		// height = window.innerHeight;
-      width = 40;
-      height = 40;
+  		squareSize = 20;
+  		width = Math.max(window.innerWidth, 100);
+  		height = Math.max(window.innerHeight, 100);
+  		pause = false;
 
   		initArrays();
 
@@ -34,10 +56,38 @@
   		remainderXBuffer = (width - arrayWidth * squareSize) / 2 + squareSize/2;
   		remainderYBuffer = (height - arrayHeight * squareSize) / 2 + squareSize/2;
 
-  		svgContainer = d3.select("body")
-  			.append("svg");
+  		window.addEventListener("keydown", checkKeyPressed, false);
+
+  		svgContainer = d3.select("#content")
+  			.append("svg")
+  			.attr("width", width)
+  			.attr("height", height)
+  			.on("click", function(d){
+  				var mouseX = d3.mouse(this)[0],
+				mouseY = d3.mouse(this)[1];
+  				addNewCell(mouseX, mouseY);
+			})
+  			// .attr("width", window.innerWidth)
+  			// .attr("height", window.innerHeight-d3.select("#nav").attr("height"));
       
   		draw();
+  	}
+
+  	function checkKeyPressed(e) {
+	    if (e.keyCode == "32") {
+	        pause = !pause;
+	    }
+	}
+
+  	function addNewCell(mouseX, mouseY){
+
+		// console.log("mouseX:"+mouseX+" mouseY:"+mouseY);
+		cellX = parseInt((mouseX - remainderXBuffer + (squareSize/2))/squareSize);
+		cellY = parseInt((mouseY - remainderYBuffer + (squareSize/2))/squareSize);
+		console.log("mouseX:"+mouseX+" mouseY:"+mouseY+" cellX:"+cellX+" cellY:"+cellY);
+		arrayA[cellX][cellY].alive = true;
+		arrayA[cellX][cellY].age++;
+		// drawTick()
   	}
 
   	function initArrays(){
@@ -45,23 +95,26 @@
   		// calculate array size
   		arrayWidth = parseInt( width / squareSize );
   		arrayHeight = parseInt( height / squareSize );
-  		console.log("arrayWidth: "+arrayWidth+" arrayHeight: "+arrayHeight);
 
   		// initialise arrays to false
-  		arrayA = arrayB = new Array(arrayWidth);
+  		arrayA = new Array(arrayWidth);
+  		arrayB = new Array(arrayWidth);
   		for (var i = 0; i < arrayWidth; i++){
-  			arrayA[i] = arrayB[i] = new Array(arrayHeight);
+  			arrayA[i] = new Array(arrayHeight);
+  			arrayB[i] = new Array(arrayHeight);
   			for (var j = 0; j < arrayHeight; j++){
-  				arrayA[i][j] = arrayB[i][j] = {"alive":false};
+  				arrayA[i][j] = {"alive":false, "age":0};
+  				arrayB[i][j] = {"alive":false, "age":0};
   			} 
   		}
-      // console.log(arrayA);
+
   		// seed arrayA
+  		arrayA[1][1].alive = arrayA[2][2].alive = arrayA[3][3].alive = arrayA[4][3].alive = true;
+  		arrayA[1][2].alive = arrayA[2][1].alive = arrayA[3][4].alive = arrayA[4][4].alive = true;
+  		arrayA[1][1].age = arrayA[2][1].age = arrayA[3][1].age = 1;
   		// arrayA[1][1].alive = arrayA[1][2].alive = arrayA[1][3].alive = arrayA[1][0].alive = true;
-      arrayA[1][1].alive = true;
-
-
-  		// console.log(arrayA);
+  		// arrayA[2][1].alive = arrayA[2][2].alive = arrayA[2][3].alive = arrayA[2][0].alive = true;
+      // arrayA[1][1].alive = true;
   	}
 
 
@@ -72,40 +125,10 @@
   			.attr("width", "100%")
   			.attr("height", "100%")
   			.attr("fill", "pink");
-      drawInit();
+
+      	drawInit();
   		run();
-      // tempDraw();
   	}
-
-    function tempDraw(){
-      var data = [30];
-      svgContainer.selectAll("g")
-        .data(data)
-        .enter()
-        .append("circle")
-        .attr("cx", 60)
-        .attr("cy", 100)
-        .attr("r", function(d){ return d;})
-
-        var count = 0;
-        var running = setInterval(function(){
-
-          data[0] = data[0] - 1;
-
-            svgContainer.selectAll("circle")
-            .data(data)
-            .enter()
-            .transition()
-            .attr("r", function(d){ return d;});
-
-          if(count++ == 10){done()};
-
-        },500);
-        function done(){
-          console.log("done");
-          clearInterval(running);      
-        }
-    }
 
     function drawInit(){
       svgContainer.selectAll("g")
@@ -116,20 +139,25 @@
         .data( function(d, i, j){ return d;})
         .enter()
         .append("circle")
+        .attr("fill", function(d){var shade = (d.age/10) * 254 ;return"rgb("+shade+","+shade+","+shade+")"})
         .attr("cx", function(d, i, j){ return j * squareSize + remainderXBuffer ;})
         .attr("cy", function(d, i, j){ return i * squareSize + remainderYBuffer ;})
-        .attr("r", function(d,i){
-            if (d.alive){ return 5;} else {return 1;} 
-          ;})
+        .attr("r", function(d){
+	  				if (d.alive){ return (squareSize/2);} else {return 1;} 
+	  			;})
+
     }
 
   	function run(){
   		var count = 0;
-  		var running = setInterval(function(){
-          drawTick();
-          tick();
-          if(count++ == 10){done()};
 
+  		var running = setInterval(function(){
+  			if (!pause){
+				drawTick();
+				tick();
+
+				// if(count++ == 20){done()};
+			}
         },500);
         function done(){
         	console.log("done");
@@ -139,90 +167,119 @@
 
   	function tick(){
 
-  		console.log("tick");
-
-      //clear arrayB
-      for (row = 0; row < arrayWidth; row++){
-        for (col = 0; col < arrayHeight; col++){
-          arrayB[col][row].alive = false;
-        }
-      }
-      // console.log(arrayB);
+		//clear arrayB
+		for (col = 0; col < arrayWidth; col++){
+			for (row = 0; row < arrayHeight; row++){
+				arrayB[col][row].alive = false;
+				arrayB[col][row].age = 0;
+			}
+		}
 
   		//create next array
-  		for (row = 0; row < arrayWidth; row++){
-  			for (col = 0; col < arrayHeight; col++){
-  				var aliveNeighbours = checkNeighbours(row, col);
+  		for (col = 0; col < arrayWidth; col++){
+  			for (row = 0; row < arrayHeight; row++){
+  				var aliveNeighbours = checkNeighbours(col, row);
+
 			// Any live cell with fewer than two live neighbours dies, as if caused by under-population.
-				if(arrayA[row][col].alive && aliveNeighbours < 2){
-					console.log("a");
-					arrayB[row][col].alive = false;}
+				if(arrayA[col][row].alive && aliveNeighbours < 2){
+					arrayB[col][row].alive = false;
+				}
 			// Any live cell with two or three live neighbours lives on to the next generation.
-				else if(arrayA[row][col].alive && aliveNeighbours < 4){
-					console.log("b");
-					arrayB[row][col].alive = true;}
+				else if(arrayA[col][row].alive && aliveNeighbours < 4){
+					arrayB[col][row].alive = true;
+					arrayB[col][row].age = arrayA[col][row].age++;
+				}
 			// Any live cell with more than three live neighbours dies, as if by overcrowding.
-				else if(arrayA[row][col].alive){
-					console.log("c");
-					arrayB[row][col].alive = false;}
+				else if(arrayA[col][row].alive){
+					arrayB[col][row].alive = false;
+				}
 			// Any dead cell with exactly three live neighbours becomes a live cell, as if by reproduction.
-				else if(!arrayA[row][col].alive && aliveNeighbours === 3){
-					console.log("d");
-					arrayB[row][col].alive = true;}
+				else if(!arrayA[col][row].alive && aliveNeighbours === 3){
+					arrayB[col][row].alive = true;
+					arrayB[col][row].age = 1;
+				}
   			}
   		}
-      // console.log(arrayB);
 
   		//set array
-      for (row = 0; row < arrayWidth; row++){
-        for (col = 0; col < arrayHeight; col++){
-          arrayA[col][row].alive = arrayB[col][row].alive;
-          console.log(arrayA[col][row].alive);
-        }
-      }
-  		// arrayA = arrayB;
-    //   console.log(arrayA);
+		for (col = 0; col < arrayWidth; col++){
+			for (row = 0; row < arrayHeight; row++){
+				arrayA[col][row].alive = arrayB[col][row].alive;
+			}
+		}
+  	}
+
+  	function printArray(){
+  		console.log("new print");
+  		var strLine = " ";
+		for (col = 0; col < arrayWidth; col++){
+			for (row = 0; row < arrayHeight; row++){
+				strLine = strLine + " " + (arrayA[col][row].alive ? "T" : "F" );
+			}
+			console.log("");
+			console.log(strLine);
+			strLine = " "
+		}
   	}
 
   	//count number of surrounding neighbours
-  	function checkNeighbours(row, col){
+  	function checkNeighbours(col, row){
 		//function for using modulo and keeping output positive
   		Number.prototype.mod = function(n) { return ((this%n)+n)%n; }
-
   		var neighbours = 0;
-  		for (i = 0; i < 3; i++){
-  			for (j = 0; j < 3; j++){
-  				
-  				var x = (col + 1 - i).mod(arrayHeight);
-  				var y = (col + 1 - j).mod(arrayWidth);
-  				if (arrayA[x][y].alive){
-  					neighbours++;
-  				}
-  			}
+
+		if((col-1) >=0 & (row-1) >= 0)//0,0
+  		{
+  			if (arrayA[col-1][row-1].alive) {neighbours++;} 
   		}
-  		// console.log("neighbours:"+neighbours);
+  		if((col) >=0 & (row-1) >= 0)//1,0
+  		{
+  			if (arrayA[col][row-1].alive) {neighbours++;} 
+  		}
+  		if((col+1) < arrayWidth & (row-1) >= 0)//2,0
+  		{
+  			if (arrayA[col+1][row-1].alive) {neighbours++;} 
+  		}
+
+  		if((col-1) >=0 & (row) >= 0)//0,1
+  		{
+  			if (arrayA[col-1][row].alive) {neighbours++;} 
+  		}
+  		// if((row) >=0 & (col) >= 0)//1,1 NOT THIS ONE!
+  		// {
+  		// 	if (arrayA[row][col].alive) {neighbours++;} 
+  		// }
+  		if((col+1) <arrayWidth & (row) >= 0)//2,1
+  		{
+  			if (arrayA[col+1][row].alive) {neighbours++;} 
+  		}
+
+  		if((col-1) >=0 & (row+1) < arrayHeight)//0,2
+  		{
+  			if (arrayA[col-1][row+1].alive) {neighbours++;} 
+  		}
+  		if((col) >=0 & (row+1) < arrayHeight)//1,2
+  		{
+  			if (arrayA[col][row+1].alive) {neighbours++;} 
+  		}
+  		if((col+1) <arrayWidth & (row+1) < arrayHeight)//2,2
+  		{
+  			
+  			if (arrayA[col+1][row+1].alive) {neighbours++;} 
+  		}
+
   		return neighbours;
   	}
 
   	function drawTick(){
-      //background
-      // svgContainer.append("rect")
-      //   .attr("width", "100%")
-      //   .attr("height", "100%")
-      //   .attr("fill", "pink");
-      // drawInit();
-
-  		d3.selectAll("circle")
-  			.data(arrayA)
-  			// .selectAll("circle")
-  			.data( function(d){ return d;})
-  			// .enter()
-  			// .append("circle")
-  			// .attr("cx", function(d, i, j){ return j * squareSize + remainderXBuffer ;})
-  			// .attr("cy", function(d, i, j){ return i * squareSize + remainderYBuffer ;})
-  			.transition()
-        .attr("r", function(d){
-	  				if (d.alive){ return 5;} else {return 1;} 
+      	svgContainer.selectAll("g")
+	        .data(arrayA)
+	        .selectAll("circle")
+	        .data( function(d, i, j){ return d;})
+        	.transition()
+        	.attr("fill", function(d){var shade = (d.age/10) * 254 ;return"rgb("+shade+","+shade+","+shade+")"})
+        	.attr("r", function(d){
+	  				if (d.alive){ return (squareSize/2);} else {return 1;} 
 	  			;})
   	}
 
