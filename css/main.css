@@ -2,13 +2,8 @@ html, body { margin:0; padding:0; overflow:hidden }
 svg { 
 	padding:0;
 	margin:0;
-	
-	/*
-	position:fixed; 
-	top:0; 
-	left:0; 
-	height:100%; width:100% */
 }
+
 .navbar, .navbar-default{
 	padding:0;
 	margin:0;
@@ -16,4 +11,9 @@ svg {
 
 #instructions{ 
 	cursor: default; 
+	-moz-user-select: none; 
+	-webkit-user-select: none; 
+	-ms-user-select:none; 
+	user-select:none;
+	-o-user-select:none;
 }

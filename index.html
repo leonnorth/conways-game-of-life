@@ -37,6 +37,7 @@
   		arrayWidth,
   		arrayHeight,
   		squareSize,
+      speed,
   		toggle,
   		remainderXBuffer,
   		pause,
@@ -46,6 +47,9 @@
   	var	arrayB;
 
   	function init(){
+
+      // speed is time in ms
+      speed = 500;
   		
   		squareSize = 20;
   		width = Math.max(window.innerWidth, 720);
@@ -78,6 +82,10 @@
   		draw();
   		
   	}
+    $(window).resize(function() {
+       d3.select("svg").remove();
+       init();
+    });
 
   	function reset(){
   		pause = true;
@@ -110,11 +118,12 @@
   	}
 
   	function writeInstructions(){
-  		console.log("writeInstructions")
-  		var instructions = "hi, SPACE to pause R to reset"
+  		
+  		var instructions = "Hi, this implementation of Conway's Game of Life is played on a taurus, that is, the left side is linked to the right, and the top is linked to the bottom. SPACE to pause. C to clear. R to randomly seed. S to use predefined seed"
 
   		svgContainer.append("text")
   			.text(instructions)
+        .attr("id", "instructions")
 	  		.attr("x", 0)
 	  		.attr("y", 0)
 	  		.attr("dy", 0)
@@ -122,8 +131,8 @@
 	  		.attr("fill", "white")
 	  		.attr("font-size", "50px")
 	  		.attr("font-family", "sans-serif")
-	  		.attr("transform", function(d, i){return"translate("+width/2+","+height/2+")";})
-	  		.call(wrap, Math.max(width/2, 300))
+	  		.attr("transform", function(d, i){return"translate("+width/2+","+80+")";})
+	  		.call(wrap, Math.max(width/3 * 2, 300))
 
   		/*
 		Wraps text in the width given.
@@ -155,28 +164,49 @@
   	}
 
   	function checkKeyPressed(e) {
-
-  		//r to reset
-		if (e.keyCode == "82") {
-	        reset();
+      console.log(e.keyCode);
+      //c to clear
+      if (e.keyCode == "67") {
+          clearSeeds();
+      }
+      //s to seed 
+      if (e.keyCode == "83") {
+          pause = !pause;
+          definedSeed();
+          pause = !pause;
+      }
+  		//r to randomise seed
+		  if (e.keyCode == "82") {
+          pause = !pause;
+	        randomSeed();
+          pause = !pause;
 	    }
   		//spacebar to pause
 	    if (e.keyCode == "32") {
 	        pause = !pause;
 	    }
-	}
+    }
 
   	function addNewCell(mouseX, mouseY){
 
 		cellX = parseInt((mouseX - remainderXBuffer + (squareSize/2))/squareSize);
 		cellY = parseInt((mouseY - remainderYBuffer + (squareSize/2))/squareSize);
 
-		arrayA[cellX][cellY].alive = true;
-		arrayA[cellX][cellY].age = Math.max(arrayA[cellX][cellY].age, 1);
+    if(arrayA[cellX][cellY].alive){ //kill the alive cell on a click
+      arrayA[cellX][cellY].alive = false;
+      arrayA[cellX][cellY].age = 0;
+      //find the correct cell by the xy coordinates and update it's size
+      var id = '#id'+cellY.toString()+'X'+(cellX).toString();
+      svgContainer.select(id).transition().duration(100).attr("r", 1);
+    }
+    else {  //make a dead cell alive on click
+  		arrayA[cellX][cellY].alive = true;
+  		arrayA[cellX][cellY].age = Math.max(arrayA[cellX][cellY].age, 1);
 
-		//find the correct cell by the xy coordinates and update it's size
-		var id = '#id'+cellY.toString()+'X'+(cellX).toString();
-		svgContainer.select(id).transition().duration(100).attr("r", squareSize/2);
+  		//find the correct cell by the xy coordinates and update it's size
+  		var id = '#id'+cellY.toString()+'X'+(cellX).toString();
+  		svgContainer.select(id).transition().duration(100).attr("r", squareSize/2);
+    }
   	}
 
   	function initArrays(){
@@ -196,22 +226,65 @@
   				arrayB[i][j] = {"alive":false, "age":0};
   			} 
   		}
-
-  		// seed arrayA
-  		arrayA[1][1].alive = arrayA[2][2].alive = arrayA[3][3].alive = arrayA[4][3].alive = true;
-  		arrayA[1][2].alive = arrayA[2][1].alive = arrayA[3][4].alive = arrayA[4][4].alive = true;
-  		arrayA[1][1].age = arrayA[2][2].age = arrayA[3][3].age = arrayA[4][3].age = 1;
-  		arrayA[1][2].age = arrayA[2][1].age = arrayA[3][4].age = arrayA[4][4].age = 1;
-  		
-  		arrayA[0][10].alive = arrayA[1][9].alive = arrayA[2][9].alive = arrayA[3][9].alive = true;
-  		arrayA[4][9].alive = arrayA[4][10].alive = arrayA[4][11].alive = arrayA[3][12].alive = true;
-  		arrayA[0][12].alive = true;
-  		arrayA[0][10].age = arrayA[1][9].age = arrayA[2][9].age = arrayA[3][9].age = 1;
-  		arrayA[4][9].age = arrayA[4][10].age = arrayA[4][11].age = arrayA[3][12].age = 1;
-  		arrayA[0][12].age = 1;
+      //definedSeed();
+      randomSeed();
   	}
 
+    function definedSeed(){
 
+      //if (arrayA){      // Check the array exists 1st
+
+        //clear everything out
+        for (var i = 0; i < arrayWidth; i++){
+          for (var j = 0; j < arrayHeight; j++){
+            arrayA[i][j] = {"alive":false, "age":0};
+          } 
+        }
+      //}
+      // seed arrayA
+      arrayA[1][1].alive = arrayA[2][2].alive = arrayA[3][3].alive = arrayA[4][3].alive = true;
+      arrayA[1][2].alive = arrayA[2][1].alive = arrayA[3][4].alive = arrayA[4][4].alive = true;
+      arrayA[1][1].age = arrayA[2][2].age = arrayA[3][3].age = arrayA[4][3].age = 1;
+      arrayA[1][2].age = arrayA[2][1].age = arrayA[3][4].age = arrayA[4][4].age = 1;
+      
+      arrayA[0][10].alive = arrayA[1][9].alive = arrayA[2][9].alive = arrayA[3][9].alive = true;
+      arrayA[4][9].alive = arrayA[4][10].alive = arrayA[4][11].alive = arrayA[3][12].alive = true;
+      arrayA[0][12].alive = true;
+      arrayA[0][10].age = arrayA[1][9].age = arrayA[2][9].age = arrayA[3][9].age = 1;
+      arrayA[4][9].age = arrayA[4][10].age = arrayA[4][11].age = arrayA[3][12].age = 1;
+      arrayA[0][12].age = 1;
+    }
+
+    function randomSeed(){
+      if (arrayA){      // Check the array exists 1st
+
+        // go through each cell and give it a chance of being seeded
+        for (var i = 0; i < arrayWidth; i++){
+          for (var j = 0; j < arrayHeight; j++){
+
+            // set the aliveness and age of cell
+            var aliveness = false;
+            var age = 0;
+            if (Math.random() > 0.85){
+              aliveness = true;
+              age = 1;
+            }
+            arrayA[i][j] = {"alive":aliveness, "age":age};
+          } 
+        }
+      }
+    }
+
+    function clearSeeds(){
+      if (arrayA){      // Check the array exists 1st
+        // go through each cell and give it a chance of being seeded
+        for (var i = 0; i < arrayWidth; i++){
+          for (var j = 0; j < arrayHeight; j++){
+            arrayA[i][j] = {"alive":false, "age":0};
+          } 
+        }
+      }
+    }
 
   	function draw(){
   		// pink background
@@ -243,23 +316,23 @@
 
     }
 
-  	function run(){
-  		var running = setInterval(function(){
-  			if (!pause){
-				
-				tick();
-				drawTick();
-			}
-        },500);
-        function done(){
-        	console.log("done");
-          clearInterval(running);      
-        } 
-  	}
+    var start = null;
+    function run(timestamp){
+      if (!start) start = timestamp;
 
+      var progress = timestamp - start;
+      if (progress >= speed && !pause){
+        tick();
+        drawTick();
+        start = timestamp;
+      }
+      window.requestAnimationFrame(run);
+    }
+
+    // CORE LOGIC
   	function tick(){
 
-  		//create next array CORE LOGIC
+  		//create next array 
   		for (col = 0; col < arrayWidth; col++){
   			for (row = 0; row < arrayHeight; row++){
   				var aliveNeighbours = checkNeighbours(col, row);
@@ -299,67 +372,28 @@
 
   	}
 
-  	function printArray(){
-  		console.log("new print");
-  		var strLine = " ";
-		for (col = 0; col < arrayWidth; col++){
-			for (row = 0; row < arrayHeight; row++){
-				strLine = strLine + " " + (arrayA[col][row].alive ? "T" : "F" );
-			}
-			console.log("");
-			console.log(strLine);
-			strLine = " "
-		}
-  	}
+    //count number of surrounding neighbours
+    function checkNeighbours(col, row){
+      //function for using modulo and keeping output positive
+      Number.prototype.mod = function(n) { return ((this%n)+n)%n; }
+      
+      var neighbours = 0;
 
-  	//count number of surrounding neighbours
-  	function checkNeighbours(col, row){
-		//function for using modulo and keeping output positive
-  		Number.prototype.mod = function(n) { return ((this%n)+n)%n; }
-  		var neighbours = 0;
+       if (arrayA[(col-1).mod(arrayWidth)][(row-1).mod(arrayHeight)].alive) {neighbours++;} 
+       if (arrayA[col][(row-1).mod(arrayHeight)].alive) {neighbours++;} 
+       if (arrayA[(col+1).mod(arrayWidth)][(row-1).mod(arrayHeight)].alive) {neighbours++;} 
+       if (arrayA[(col-1).mod(arrayWidth)][row].alive) {neighbours++;} 
+     // if((row) >=0 & (col) >= 0)//1,1 NOT THIS ONE!
+     // {
+     //  if (arrayA[row][col].alive) {neighbours++;} 
+     // }
+       if (arrayA[(col+1).mod(arrayWidth)][row].alive) {neighbours++;} 
+       if (arrayA[(col-1).mod(arrayWidth)][(row+1).mod(arrayHeight)].alive) {neighbours++;} 
+       if (arrayA[col][(row+1).mod(arrayHeight)].alive) {neighbours++;} 
+       if (arrayA[(col+1).mod(arrayWidth)][(row+1).mod(arrayHeight)].alive) {neighbours++;} 
 
-		if((col-1) >=0 & (row-1) >= 0)//0,0
-  		{
-  			if (arrayA[col-1][row-1].alive) {neighbours++;} 
-  		}
-  		if((col) >=0 & (row-1) >= 0)//1,0
-  		{
-  			if (arrayA[col][row-1].alive) {neighbours++;} 
-  		}
-  		if((col+1) < arrayWidth & (row-1) >= 0)//2,0
-  		{
-  			if (arrayA[col+1][row-1].alive) {neighbours++;} 
-  		}
-
-  		if((col-1) >=0 & (row) >= 0)//0,1
-  		{
-  			if (arrayA[col-1][row].alive) {neighbours++;} 
-  		}
-  		// if((row) >=0 & (col) >= 0)//1,1 NOT THIS ONE!
-  		// {
-  		// 	if (arrayA[row][col].alive) {neighbours++;} 
-  		// }
-  		if((col+1) <arrayWidth & (row) >= 0)//2,1
-  		{
-  			if (arrayA[col+1][row].alive) {neighbours++;} 
-  		}
-
-  		if((col-1) >=0 & (row+1) < arrayHeight)//0,2
-  		{
-  			if (arrayA[col-1][row+1].alive) {neighbours++;} 
-  		}
-  		if((col) >=0 & (row+1) < arrayHeight)//1,2
-  		{
-  			if (arrayA[col][row+1].alive) {neighbours++;} 
-  		}
-  		if((col+1) <arrayWidth & (row+1) < arrayHeight)//2,2
-  		{
-  			
-  			if (arrayA[col+1][row+1].alive) {neighbours++;} 
-  		}
-
-  		return neighbours;
-  	}
+      return neighbours;
+    }
 
   	function drawTick(){
       	svgContainer.selectAll("g")
@@ -375,10 +409,6 @@
   	}
 
   	init();
-
-  	// window.onresize = function(event) {
-  	// 		reset();
-  	// 	};
 
   	</script>
 
